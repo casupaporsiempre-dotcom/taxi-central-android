@@ -1,0 +1,49 @@
+name: Compilar APKs Taxi
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reconstruir proyecto
+        run: |
+          cat stage/part-*.b64 > taxi-stage.b64
+          base64 -d taxi-stage.b64 > taxi-stage.tar.gz
+          mkdir app
+          tar -xzf taxi-stage.tar.gz -C app
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
+      - name: SDK Android
+        run: yes | sdkmanager --licenses >/dev/null && sdkmanager "platforms;android-36" "build-tools;35.0.0"
+
+      - name: Compilar
+        working-directory: app
+        run: gradle :cliente:assembleDebug :conductor:assembleDebug :central:assembleDebug
+
+      - name: Preparar APKs
+        run: |
+          mkdir salida
+          cp app/cliente/build/outputs/apk/debug/cliente-debug.apk salida/Taxi-Cliente.apk
+          cp app/conductor/build/outputs/apk/debug/conductor-debug.apk salida/Taxi-Conductor.apk
+          cp app/central/build/outputs/apk/debug/central-debug.apk salida/Taxi-Central.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Taxi-Central-APKs
+          path: salida/*.apk
