@@ -13,21 +13,18 @@ jobs:
 
       - name: Verificar paquete
         run: |
-          echo "Hashes recibidos:"
-          sha256sum stage/part-*.b64
-          echo "Tamaños recibidos:"
-          wc -c stage/part-*.b64
-          echo "Hashes esperados:"
-          echo "ac3295327a4eac314d1c18ff977d2380d1b16a46f33f4cae2839aa86e897162d  stage/part-00.b64"
-          echo "60442921fee0d8a620ff9333e978c0a9abedf1eacac61e88d824da4c2b3a58bd  stage/part-01.b64"
-          echo "7adae359a4f4ee25a70c4a9118004a73a1f70b3f49ec4cf7d848a5e4cb0c85cf  stage/part-02.b64"
+          sha256sum stage/part-00.b64 stage/part-01.b64 stage/part-02a.b64 stage/part-02b.b64
+          wc -c stage/part-00.b64 stage/part-01.b64 stage/part-02a.b64 stage/part-02b.b64
+          echo "ac3295327a4eac314d1c18ff977d2380d1b16a46f33f4cae2839aa86e897162d  stage/part-00.b64" | sha256sum -c -
+          echo "60442921fee0d8a620ff9333e978c0a9abedf1eacac61e88d824da4c2b3a58bd  stage/part-01.b64" | sha256sum -c -
+          echo "d23696e7fcf238fc11898f9f78f8e38bac5be68a47a0bb9228391b8dacf6fb5f  stage/part-02a.b64" | sha256sum -c -
+          echo "10df14b80331ccc2a4660f5495bc45496211746f2fca60eaed9558a3bb50c4b7  stage/part-02b.b64" | sha256sum -c -
 
       - name: Reconstruir proyecto
         run: |
-          cat stage/part-*.b64 > taxi-stage.b64
+          cat stage/part-00.b64 stage/part-01.b64 stage/part-02a.b64 stage/part-02b.b64 > taxi-stage.b64
           base64 -d taxi-stage.b64 > taxi-stage.tar.gz
-          echo "SHA256 paquete reconstruido:"
-          sha256sum taxi-stage.tar.gz
+          echo "6e370ea1e07d059a89766d24d180fa9ba5f307e19c1f6aec7df997f730a779d5  taxi-stage.tar.gz" | sha256sum -c -
           mkdir app
           tar -xzf taxi-stage.tar.gz -C app
 
